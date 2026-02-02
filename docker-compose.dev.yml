@@ -14,7 +14,10 @@ services:
       - php
       - nextjs
     networks:
-      - internal
+      fam-balance-internal-dev:
+        ipv4_address: 172.200.0.11
+        aliases:
+          - fam-balance-nginx-dev.sandbox
 
   php:
     build:
@@ -31,19 +34,28 @@ services:
     depends_on:
       - mysql
     networks:
-      - internal
+      fam-balance-internal-dev:
+        ipv4_address: 172.200.0.12
+        aliases:
+          - fam-balance-php-dev.sandbox
 
   nextjs:
     build:
       context: ../fam-balance-ui
-      dockerfile: ../fam-balance-deploy/nextjs/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://localhost:8080
+      dockerfile: ../fam-balance-deploy/nextjs/Dockerfile.dev
     container_name: fam-balance-nextjs-dev
+    volumes:
+      - ../fam-balance-ui:/app
+      - /app/node_modules
+      - /app/.next
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://fjperezcantero.local:8080/api/v1}
     networks:
-      - internal
+      fam-balance-internal-dev:
+        ipv4_address: 172.200.0.14
+        aliases:
+          - fam-balance-nextjs-dev.sandbox
 
   mysql:
     image: mysql:8.0
@@ -60,11 +72,17 @@ services:
     command:
       - '--skip-log-bin'
     networks:
-      - internal
+      fam-balance-internal-dev:
+        ipv4_address: 172.200.0.13
+        aliases:
+          - fam-balance-mysql-dev.sandbox
 
 volumes:
   mysql_data_dev:
 
 networks:
-  internal:
-    name: fam-balance-internal-dev
+  fam-balance-internal-dev:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.200.0.0/24
