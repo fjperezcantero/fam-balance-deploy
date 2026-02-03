@@ -11,7 +11,7 @@ networks:
 
 services:
   nginx-proxy:
-    container_name: fam-balance-nginx-proxy
+    container_name: fam-balance-deploy-nginx-proxy
     image: jwilder/nginx-proxy
     restart: always
     ports:
@@ -30,7 +30,7 @@ services:
         ipv4_address: 172.102.0.15
 
   letsencrypt:
-    container_name: fam-balance-letsencrypt
+    container_name: fam-balance-deploy-letsencrypt
     image: jrcs/letsencrypt-nginx-proxy-companion
     restart: always
     environment:
@@ -46,7 +46,7 @@ services:
         ipv4_address: 172.102.0.16
 
   nginx:
-    container_name: fam-balance-nginx
+    container_name: fam-balance-deploy-nginx
     image: nginx:alpine
     expose:
       - "80"
@@ -67,7 +67,7 @@ services:
           - fam-balance-nginx-prod.sandbox
 
   php:
-    container_name: fam-balance-php
+    container_name: fam-balance-deploy-php
     build:
       context: ../fam-balance
       dockerfile: ../fam-balance-deploy/php/Dockerfile
@@ -87,7 +87,7 @@ services:
           - fam-balance-php-prod.sandbox
 
   nextjs:
-    container_name: fam-balance-nextjs
+    container_name: fam-balance-deploy-nextjs
     build:
       context: ../fam-balance-ui
       dockerfile: ../fam-balance-deploy/nextjs/Dockerfile
@@ -102,7 +102,7 @@ services:
           - fam-balance-nextjs-prod.sandbox
 
   mysql:
-    container_name: fam-balance-mysql
+    container_name: fam-balance-deploy-mysql
     image: mysql:8.0
     ports:
       - "9906:3306"
