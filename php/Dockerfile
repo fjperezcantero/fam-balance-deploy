@@ -1,57 +1,46 @@
-FROM php:8.4-fpm-alpine
+FROM php:8.5-fpm-alpine3.22
+
+ARG UID
+ARG GID
+
+ENV UID=${UID}
+ENV GID=${GID}
+
+RUN mkdir -p /var/www/html
 
 WORKDIR /var/www/html
 
-# Install dependencies for GD and other extensions
+RUN addgroup -S -g ${GID} app-runner
+RUN adduser -G app-runner --system -D -s /bin/sh -u ${UID} app-runner
+
+RUN sed -i "s/user = www-data/user = app-runner/g" /usr/local/etc/php-fpm.d/www.conf
+RUN sed -i "s/group = www-data/group = app-runner/g" /usr/local/etc/php-fpm.d/www.conf
+RUN sed -i "s/listen.owner = www-data/listen.owner = app-runner/g" /usr/local/etc/php-fpm.d/www.conf
+
+RUN echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf
+
+# Install dependencies for GD
 RUN apk add --no-cache \
     freetype-dev \
     libjpeg-turbo-dev \
     libpng-dev \
-    libwebp-dev \
-    libzip-dev \
-    icu-dev
+    libwebp-dev
 
-# Configure and install PHP extensions
+# Configure and install GD extension
 RUN docker-php-ext-configure gd \
     --with-freetype \
     --with-jpeg \
     --with-webp
 
-RUN docker-php-ext-install \
-    mysqli \
-    pdo \
-    pdo_mysql \
-    gd \
-    zip \
-    intl \
-    opcache
+RUN docker-php-ext-install mysqli pdo pdo_mysql gd
+RUN docker-php-ext-enable mysqli pdo pdo_mysql gd
 
-RUN docker-php-ext-enable \
-    mysqli \
-    pdo \
-    pdo_mysql \
-    gd \
-    zip \
-    intl \
-    opcache
-
-# Install composer
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
-# PHP production configuration
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Custom PHP configuration
-RUN echo "opcache.enable=1" >> "$PHP_INI_DIR/conf.d/opcache.ini" && \
-    echo "opcache.memory_consumption=128" >> "$PHP_INI_DIR/conf.d/opcache.ini" && \
-    echo "opcache.interned_strings_buffer=8" >> "$PHP_INI_DIR/conf.d/opcache.ini" && \
-    echo "opcache.max_accelerated_files=4000" >> "$PHP_INI_DIR/conf.d/opcache.ini" && \
-    echo "opcache.validate_timestamps=0" >> "$PHP_INI_DIR/conf.d/opcache.ini"
+USER app-runner
 
-# Create www-data user if it doesn't exist (for permissions)
-RUN addgroup -g 1000 -S www && \
-    adduser -u 1000 -S www -G www
-
-USER www
-
-CMD ["php-fpm"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["php-fpm", "-y", "/usr/local/etc/php-fpm.conf", "-R"]
