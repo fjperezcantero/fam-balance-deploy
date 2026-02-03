@@ -51,11 +51,11 @@ git pull origin master
 
 log_info "Updating fam-balance-ui..."
 cd ../fam-balance-ui
-git pull origin main
+git pull origin master
 
 log_info "Updating fam-balance-deploy..."
 cd "$SCRIPT_DIR"
-git pull origin main
+git pull origin master
 
 # Build and deploy
 log_info "Building and starting containers..."
