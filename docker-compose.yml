@@ -1,57 +1,78 @@
+volumes:
+  fam_balance_mysql_var_lib:
+    external: true
+  certs:
+  html:
+  acme:
+
+networks:
+  fam-balance-network:
+    external: true
+
 services:
   nginx-proxy:
-    image: jwilder/nginx-proxy
     container_name: fam-balance-nginx-proxy
+    image: jwilder/nginx-proxy
+    restart: always
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - certs:/etc/nginx/certs
-      - vhost:/etc/nginx/vhost.d
+      - certs:/etc/nginx/certs:ro
+      - ./nginx-proxy/vhost.d:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
+      - acme:/etc/acme.sh
+    labels:
+      - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
     networks:
-      - web
+      fam-balance-network:
+        ipv4_address: 172.102.0.15
 
   letsencrypt:
-    image: jrcs/letsencrypt-nginx-proxy-companion
     container_name: fam-balance-letsencrypt
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - certs:/etc/nginx/certs
-      - vhost:/etc/nginx/vhost.d
-      - html:/usr/share/nginx/html
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    restart: always
     environment:
       - NGINX_PROXY_CONTAINER=fam-balance-nginx-proxy
-    depends_on:
-      - nginx-proxy
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - ./nginx-proxy/vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - acme:/etc/acme.sh
     networks:
-      - web
+      fam-balance-network:
+        ipv4_address: 172.102.0.16
 
   nginx:
-    image: nginx:alpine
     container_name: fam-balance-nginx
+    image: nginx:alpine
+    expose:
+      - "80"
     volumes:
       - ../fam-balance/public:/var/www/html/public:ro
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-    environment:
-      - VIRTUAL_HOST=${DOMAINS}
-      - LETSENCRYPT_HOST=${DOMAINS}
-      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
     depends_on:
       - php
       - nextjs
+    environment:
+      - VIRTUAL_HOST=fjperezcantero.es,www.fjperezcantero.es,api.fjperezcantero.es,fam-balance.fjperezcantero.es
+      - LETSENCRYPT_HOST=fjperezcantero.es,www.fjperezcantero.es,api.fjperezcantero.es,fam-balance.fjperezcantero.es
+      - LETSENCRYPT_EMAIL=fjperezcantero@gmail.com
     networks:
-      - web
-      - internal
+      fam-balance-network:
+        ipv4_address: 172.102.0.11
+        aliases:
+          - fam-balance-nginx-prod.sandbox
 
   php:
+    container_name: fam-balance-php
     build:
       context: ../fam-balance
       dockerfile: ../fam-balance-deploy/php/Dockerfile
-    container_name: fam-balance-php
     volumes:
-      - ../fam-balance:/var/www/html
+      - ../fam-balance:/var/www/html:delegated
     environment:
       - DB_HOST=mysql
       - DB_DATABASE=${DB_DATABASE}
@@ -60,44 +81,42 @@ services:
     depends_on:
       - mysql
     networks:
-      - internal
+      fam-balance-network:
+        ipv4_address: 172.102.0.12
+        aliases:
+          - fam-balance-php-prod.sandbox
 
   nextjs:
+    container_name: fam-balance-nextjs
     build:
       context: ../fam-balance-ui
       dockerfile: ../fam-balance-deploy/nextjs/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-    container_name: fam-balance-nextjs
     environment:
       - NODE_ENV=production
     networks:
-      - internal
+      fam-balance-network:
+        ipv4_address: 172.102.0.14
+        aliases:
+          - fam-balance-nextjs-prod.sandbox
 
   mysql:
-    image: mysql:8.0
     container_name: fam-balance-mysql
+    image: mysql:8.0
+    ports:
+      - "9906:3306"
+    volumes:
+      - fam_balance_mysql_var_lib:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
       - MYSQL_DATABASE=${DB_DATABASE}
       - MYSQL_USER=${DB_USERNAME}
       - MYSQL_PASSWORD=${DB_PASSWORD}
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     command:
       - '--skip-log-bin'
     networks:
-      - internal
-
-volumes:
-  certs:
-  vhost:
-  html:
-  mysql_data:
-
-networks:
-  web:
-    name: fam-balance-web
-  internal:
-    name: fam-balance-internal
+      fam-balance-network:
+        ipv4_address: 172.102.0.13
+        aliases:
+          - fam-balance-mysql-prod.sandbox
