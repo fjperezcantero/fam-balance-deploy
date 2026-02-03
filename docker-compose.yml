@@ -70,8 +70,8 @@ services:
   php:
     container_name: fam-balance-deploy-php
     build:
-      context: ../fam-balance
-      dockerfile: ../fam-balance-deploy/php/Dockerfile
+      context: ./php
+      dockerfile: Dockerfile
     volumes:
       - ../fam-balance:/var/www/html:delegated
     environment:

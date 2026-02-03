@@ -22,8 +22,8 @@ services:
 
   php:
     build:
-      context: ../fam-balance
-      dockerfile: ../fam-balance-deploy/php/Dockerfile
+      context: ./php
+      dockerfile: Dockerfile
     container_name: fam-balance-php-dev
     volumes:
       - ../fam-balance:/var/www/html
