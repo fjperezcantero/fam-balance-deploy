@@ -1,5 +1,5 @@
 volumes:
-  fam_balance_mysql_var_lib:
+  mysql_data:
     external: true
   certs:
   html:
@@ -107,7 +107,7 @@ services:
     ports:
       - "9906:3306"
     volumes:
-      - fam_balance_mysql_var_lib:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
       - MYSQL_DATABASE=${DB_DATABASE}
