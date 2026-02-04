@@ -24,6 +24,9 @@ services:
     build:
       context: ./php
       dockerfile: Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
     container_name: fam-balance-php-dev
     volumes:
       - ../fam-balance:/var/www/html
