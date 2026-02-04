@@ -36,7 +36,8 @@ services:
       - DB_USERNAME=${DB_USERNAME:-fam_balance}
       - DB_PASSWORD=${DB_PASSWORD:-fam_balance}
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
       fam-balance-network:
         ipv4_address: 172.102.0.12
@@ -75,6 +76,12 @@ services:
       - fam_balance_mysql_var_lib:/var/lib/mysql
     command:
       - '--skip-log-bin'
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       fam-balance-network:
         ipv4_address: 172.102.0.13
