@@ -38,6 +38,14 @@ docker compose up -d                              # Start production stack
 docker compose down                               # Stop production stack
 ```
 
+### Maintenance
+```bash
+./cleanup.sh                                      # Clean unused Docker images and build cache
+./cleanup.sh -a                                   # Also remove all unused images (not just dangling)
+./cleanup.sh -d                                   # Dry run (show what would be deleted)
+./cleanup.sh -f                                   # Force (skip confirmation prompts)
+```
+
 ### Service Management
 ```bash
 docker compose logs -f [service]                  # View logs (php, nextjs, nginx, mysql)
@@ -53,6 +61,7 @@ docker compose exec mysql mysql -u root -p        # Access MySQL shell
 | `docker-compose.yml` | Production config with SSL and multi-domain routing |
 | `docker-compose.dev.yml` | Local development config on localhost:8080 |
 | `deploy.sh` | Automated deployment script |
+| `cleanup.sh` | Remote Docker cleanup (images, build cache) |
 | `nginx/default.conf` | Production nginx routing rules |
 | `nginx/default.dev.conf` | Development nginx routing rules |
 | `php/Dockerfile` | PHP 8.4-FPM with Laravel extensions |
@@ -65,6 +74,10 @@ Required in `.env`:
 - `LETSENCRYPT_EMAIL` - SSL certificate registration email
 - `DB_*` - MySQL credentials (ROOT_PASSWORD, DATABASE, USERNAME, PASSWORD)
 - `NEXT_PUBLIC_API_URL` - API URL passed to Next.js at build time
+- `SSH_HOST` - Remote server hostname (for cleanup.sh)
+- `SSH_USER` - SSH username (for cleanup.sh)
+- `SSH_KEY` - Path to SSH private key (optional, use this OR SSH_PASS_FILE)
+- `SSH_PASS_FILE` - Path to file with SSH password (requires sshpass)
 
 ## Docker Networks
 
