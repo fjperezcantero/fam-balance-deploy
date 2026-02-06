@@ -13,12 +13,15 @@ This is a **Docker Compose deployment configuration** for the Fam Balance full-s
 ## Architecture
 
 ```
-nginx-proxy (SSL termination)
+nginx-proxy (SSL termination + Let's Encrypt)
     ↓
 nginx (request routing)
-    ├── fjperezcantero.es → Next.js (port 3000)
+    ├── fjperezcantero.es / www.* → 301 redirect to app.*
+    ├── app.fjperezcantero.es → Next.js (port 3000) + Laravel API
     ├── api.fjperezcantero.es → Laravel API (php-fpm:9000)
-    └── fam-balance.fjperezcantero.es → Laravel web (php-fpm:9000)
+    ├── fam-balance.fjperezcantero.es → Laravel web (php-fpm:9000)
+    ├── gym-metrics.fjperezcantero.es → Laravel web (php-fpm:9000)
+    └── wardrobes.fjperezcantero.es → Laravel web (php-fpm:9000)
         ↓
     MySQL 8.0
 ```
@@ -86,8 +89,10 @@ Required in `.env`:
 
 ## Nginx Routing Logic
 
-The nginx config routes requests based on path:
-- `/api/*`, `/storage/*`, `/sanctum/*` → Laravel backend
-- Everything else → Next.js frontend
-- API subdomain receives all traffic to Laravel
-- Legacy domain serves Laravel Blade views with static asset caching
+The nginx config routes requests based on subdomain:
+- `fjperezcantero.es` / `www.*` → 301 redirect to `app.fjperezcantero.es`
+- `app.fjperezcantero.es` → Next.js frontend + Laravel API (`/api/*`, `/sanctum/*`, `/storage/*`)
+- `api.fjperezcantero.es` → Laravel API only
+- `fam-balance.fjperezcantero.es` → Laravel Blade views (legacy)
+- `gym-metrics.fjperezcantero.es` → Laravel Blade/API
+- `wardrobes.fjperezcantero.es` → Laravel Blade/API
