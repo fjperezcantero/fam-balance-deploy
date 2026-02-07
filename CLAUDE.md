@@ -82,10 +82,10 @@ Required in `.env`:
 - `SSH_KEY` - Path to SSH private key (optional, use this OR SSH_PASS_FILE)
 - `SSH_PASS_FILE` - Path to file with SSH password (requires sshpass)
 
-## Docker Networks
+## Docker Networks and Volumes
 
-- `web` - External network connecting to nginx-proxy for SSL
-- `internal` - Internal service communication network
+- `fam-balance-network` - External network (must be created manually: `docker network create --subnet=172.102.0.0/24 fam-balance-network`)
+- `mysql_data` - External volume for MySQL persistence (must be created manually: `docker volume create mysql_data`)
 
 ## Nginx Routing Logic
 

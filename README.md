@@ -5,25 +5,43 @@ Deployment configuration for the Fam Balance application stack.
 ## Architecture
 
 ```
-                         ┌─────────────────┐
-                         │   nginx-proxy   │
-                         │  (80/443 + SSL) │
-                         └────────┬────────┘
-                                  │
-                         ┌────────┴────────┐
-                         │      nginx      │
-                         │ (internal routing)│
-                         └────────┬────────┘
-                                  │
-    ┌─────────────────────────────┼─────────────────────────────┐
-    │                             │                             │
-    ▼                             ▼                             ▼
-fjperezcantero.es          api.fjperezcantero.es      fam-balance.fjperezcantero.es
-    │                             │                             │
-    ▼                             ▼                             ▼
-  nextjs:3000                  php-fpm                       php-fpm
-  (New frontend)           (Laravel API)              (Legacy Laravel web)
+                            ┌─────────────────┐
+                            │   nginx-proxy   │
+                            │  (80/443 + SSL) │
+                            └────────┬────────┘
+                                     │
+                            ┌────────┴────────┐
+                            │      nginx      │
+                            │ (internal routing)│
+                            └────────┬────────┘
+                                     │
+    ┌────────────────┬───────────────┼───────────────┬────────────────┐
+    │                │               │               │                │
+    ▼                ▼               ▼               ▼                ▼
+fjperezcantero.es  app.*          api.*       fam-balance.*     gym-metrics.*
+www.*                                                          wardrobes.*
+    │                │               │               │                │
+    │                ▼               ▼               └────────┬───────┘
+    │          nextjs:3000        php-fpm                     │
+    │          + php-fpm       (Laravel API)               php-fpm
+    │         (Next.js +                              (Laravel Blade)
+    │          Laravel API)
+    ▼
+301 → app.*
 ```
+
+All subdomains are `*.fjperezcantero.es`.
+
+### Routing rules
+
+| Domain | Destination | Description |
+|--------|-------------|-------------|
+| `fjperezcantero.es` / `www.*` | 301 → `app.*` | Redirect to app subdomain |
+| `app.fjperezcantero.es` | Next.js (default) + php-fpm (`/api/*`, `/sanctum/*`, `/storage/*`) | Frontend + API |
+| `api.fjperezcantero.es` | php-fpm | Laravel API only |
+| `fam-balance.fjperezcantero.es` | php-fpm | Laravel Blade views |
+| `gym-metrics.fjperezcantero.es` | php-fpm | Laravel Blade/API |
+| `wardrobes.fjperezcantero.es` | php-fpm | Laravel Blade/API |
 
 ## Prerequisites
 
@@ -107,9 +125,12 @@ docker compose exec mysql mysql -u root -p
 
 ## Domains
 
-- `fjperezcantero.es` - New Next.js frontend
-- `api.fjperezcantero.es` - Laravel API endpoints
-- `fam-balance.fjperezcantero.es` - Legacy Laravel web (Blade views)
+- `fjperezcantero.es` / `www.fjperezcantero.es` - Redirects to `app.fjperezcantero.es`
+- `app.fjperezcantero.es` - Next.js frontend + Laravel API (`/api/*`, `/sanctum/*`, `/storage/*`)
+- `api.fjperezcantero.es` - Laravel API only
+- `fam-balance.fjperezcantero.es` - Laravel Blade views (legacy)
+- `gym-metrics.fjperezcantero.es` - Laravel Blade/API
+- `wardrobes.fjperezcantero.es` - Laravel Blade/API
 
 ## SSL Certificates
 

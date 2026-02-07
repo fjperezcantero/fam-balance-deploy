@@ -82,6 +82,7 @@ services:
       - DB_DATABASE=${DB_DATABASE}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
+      - APP_DOMAIN=fjperezcantero.es
     depends_on:
       mysql:
         condition: service_healthy
