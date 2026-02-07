@@ -58,8 +58,8 @@ services:
       - php
       - nextjs
     environment:
-      - VIRTUAL_HOST=fjperezcantero.es,www.fjperezcantero.es,app.fjperezcantero.es,api.fjperezcantero.es,fam-balance.fjperezcantero.es,gym-metrics.fjperezcantero.es,wardrobes.fjperezcantero.es
-      - LETSENCRYPT_HOST=fjperezcantero.es,www.fjperezcantero.es,app.fjperezcantero.es,api.fjperezcantero.es,fam-balance.fjperezcantero.es,gym-metrics.fjperezcantero.es,wardrobes.fjperezcantero.es
+      - VIRTUAL_HOST=fjperezcantero.es,www.fjperezcantero.es,api.fjperezcantero.es,fam-balance.fjperezcantero.es,gym-metrics.fjperezcantero.es,wardrobes.fjperezcantero.es
+      - LETSENCRYPT_HOST=fjperezcantero.es,www.fjperezcantero.es,api.fjperezcantero.es,fam-balance.fjperezcantero.es,gym-metrics.fjperezcantero.es,wardrobes.fjperezcantero.es
       - LETSENCRYPT_EMAIL=fjperezcantero@gmail.com
     networks:
       fam-balance-network:
